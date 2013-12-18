@@ -7,6 +7,11 @@
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  * @author     Christopher Smith <chris@jalakai.co.uk>
  */
+
+include("SparqlClient.php");
+include("ClientQuery.php");
+include("SparqlQuery.php");
+include("LastFmEvent.php");
  
 if(!defined('DOKU_INC')) define('DOKU_INC',realpath(dirname(__FILE__).'/../../').'/');
 if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
@@ -130,7 +135,7 @@ class syntax_plugin_kosttektest extends DokuWiki_Syntax_Plugin {
           case DOKU_LEXER_MATCHED :
             break;
           case DOKU_LEXER_UNMATCHED :
-	    return array($state,$this->_revert($match));
+	    return array($state,$this->query($match));
             break;
           case DOKU_LEXER_EXIT :
             break;
@@ -147,6 +152,31 @@ class syntax_plugin_kosttektest extends DokuWiki_Syntax_Plugin {
 	$result .= $testval[$i];
       }
       return $result;
+    }
+
+    function query($match){
+      
+      $pieces = explode(',',$match);
+      $artist_name=$pieces[0];
+      $number = intval($pieces[1]);
+      $spq = new SparqlQuery();
+      $arr = $spq->queryArtist($artist_name,$number);
+
+      $lfe  = new  LastFmEvent($arr["artistid"]);
+      $events = $lfe->lastQuery();
+
+      $result = array();
+      $result['info']=$arr;
+      $result['events']=$events;
+
+      $res_string = (string)$arr['name'];
+      $res_string = $res_string."</br>";
+      foreach ($events as $event){
+	$temp=(string)$event['name'];
+	$res_string = $res_string.$temp."</br>";
+      }
+      return $res_string;
+
     }
 
 
@@ -192,7 +222,7 @@ $scr2 = '<script type="text/javascript">
 	  list($state, $match) = $data; // important
 	  switch ($state) {
             case DOKU_LEXER_UNMATCHED : 
-	      	      $renderer->doc .= $match;            // ptype = 'normal'
+	      $renderer->doc .= $match;            // ptype = 'normal'
 	      break;
 	  
 	  }
@@ -203,8 +233,15 @@ $scr2 = '<script type="text/javascript">
         }
         return false;
     }
+
+    /* function resultToHtmlTable($match){ */
+    /*   //      $result = '<tr>'.'<td> lol </td>'.'</tr>'; */
+    /*   $result = 'lol'; */
+    /*   return $result; */
+    /* } */
 }
  
+
 //Setup VIM: ex: et ts=4 enc=utf-8 :
 ?>
 
