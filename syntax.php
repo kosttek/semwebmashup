@@ -89,13 +89,13 @@ class syntax_plugin_kosttektest extends DokuWiki_Syntax_Plugin {
     */
     function connectTo($mode) {
       //      $this->Lexer->addSpecialPattern('<KOSTTEK>',$mode,'plugin_kosttektest');
-      $this->Lexer->addEntryPattern('<KOSTTEK>',$mode,'plugin_kosttektest');
+      $this->Lexer->addEntryPattern('<musicevent>',$mode,'plugin_kosttektest');
     }
 
 
  
    function postConnect() {
-     $this->Lexer->addExitPattern('</KOSTTEK>','plugin_kosttektest');
+     $this->Lexer->addExitPattern('</musicevent>','plugin_kosttektest');
    }
  
  
@@ -145,14 +145,6 @@ class syntax_plugin_kosttektest extends DokuWiki_Syntax_Plugin {
         return array($state,'');
     }
  
-    function _revert ($testval){
-      $len = strlen($testval);
-      $result = "";
-      for ($i = $len -1; $i >= 0; $i--) {
-	$result .= $testval[$i];
-      }
-      return $result;
-    }
 
     function query($match){
       
@@ -162,6 +154,10 @@ class syntax_plugin_kosttektest extends DokuWiki_Syntax_Plugin {
       $spq = new SparqlQuery();
       $arr = $spq->queryArtist($artist_name,$number);
 
+      if($arr["artistamount"]==0){
+	return "There is no artist named ".$artist_name.". Try to use The before name.";
+      }
+
       $lfe  = new  LastFmEvent($arr["artistid"]);
       $events = $lfe->lastQuery();
 
@@ -170,12 +166,23 @@ class syntax_plugin_kosttektest extends DokuWiki_Syntax_Plugin {
       $result['events']=$events;
 
       $res_string = (string)$arr['name'];
-      $res_string = $res_string."</br>";
+      $res_string = "<b>".$res_string."</b></br>";
+      $res_string = $res_string."<table>";
       foreach ($events as $event){
-	$temp=(string)$event['name'];
-	$res_string = $res_string.$temp."</br>";
+	$temp ="<tr>";
+	$temp=$temp."<td><a href =".(string)$event['site'].">".(string)$event['name']."</a></td>";
+	$temp=$temp."<td>".(string)$event['city']."</td>";
+	$temp=$temp."<td>".(string)$event['start_date']."</td>";
+	$tags_str = "";
+	foreach ($event["tags"] as $tag){
+	  $tags_str=$tags_str.(string)$tag."  ";
+	}
+	$temp=$temp."<td>".$tags_str."</td>";
+	$res_string = $res_string.$temp."</tr>";
       }
+      $res_string = $res_string."</table>";
       return $res_string;
+      
 
     }
 
@@ -202,20 +209,6 @@ class syntax_plugin_kosttektest extends DokuWiki_Syntax_Plugin {
 
     
     function render($mode, &$renderer, $data) {
-$scr = '<script type="text/javascript">
-	      jQuery(document).ready(function(){
-	    	  jQuery("#cl").click(function(){
-	    	      alert("HELLO WORLD!");
-	    	    });
-	    	});
-	    </script>';
-
-$scr2 = '<script type="text/javascript">
-          console.log(jQuery().jquery);
-            jQuery(document).ready(function(){
-             jQuery("body").text("Hello World!!!");
-              });
-	    </script>';
 
 
         if($mode == 'xhtml'){

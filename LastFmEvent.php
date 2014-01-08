@@ -17,7 +17,7 @@ class LastFmEvent {
     foreach($xml->events->event as $event_xml){
       $event = array();
       $event["name"]=(string)$event_xml->title;
-      $event["site"]=(string)$event_xml->venue->url;
+      $event["site"]=(string)$event_xml->url;
       $event["city"]=(string)$event_xml->venue->location->city;
       $event["country"]=(string)$event_xml->venue->location->country;
       $event["start_date"]=(string)$event_xml->startDate;
